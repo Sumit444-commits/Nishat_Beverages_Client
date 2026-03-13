@@ -21,6 +21,7 @@ const App = () => {
   const [currentCounterUser, setCurrentCounterUser] = useState(null);
   const [isForgotPasswordOpen, setForgotPasswordOpen] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
+  const [resetTokenStore, setResetTokenStore] = useState("");
 
   // Check for existing active sessions on page load
   useEffect(() => {
@@ -157,7 +158,10 @@ const App = () => {
         return (
           <CounterForgotPassword
             onBack={() => setAuthState("counterLogin")}
-            onSuccess={() => setAuthState("counterResetPassword")}
+            onSuccess={(token) => {
+              setResetTokenStore(token);
+              setAuthState("counterResetPassword");
+            }}
           />
         );
       case "counterResetPassword":
@@ -165,6 +169,7 @@ const App = () => {
           <CounterResetPassword
             onBack={() => setAuthState("counterLogin")}
             onSuccess={handleCounterResetPassword}
+            initialToken={resetTokenStore} // Pass it into the reset screen!
           />
         );
       case "loggedIn":

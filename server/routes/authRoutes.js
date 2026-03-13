@@ -1,6 +1,8 @@
 import express from "express";
 import { User } from "../models/User.js";
 import bcrypt from "bcryptjs";
+import crypto from 'crypto';
+
 
 const router = express.Router();
 
@@ -230,4 +232,73 @@ router.post("/create-admin", async (req, res) => {
   }
 });
 
+
+router.post('/reset-password', async (req, res) => {
+  try {
+    const { token, newPassword } = req.body;
+
+    // 1. Find user by token AND ensure token hasn't expired
+    const user = await User.findOne({
+      resetPasswordToken: token,
+      resetPasswordExpires: { $gt: Date.now() } // Assumes you stored an expiration date
+    });
+
+    if (!user) {
+      return res.status(400).json({ success: false, message: 'Password reset token is invalid or has expired.' });
+    }
+
+    // 2. Hash the new password
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(newPassword, salt);
+
+    // 3. Clear the reset token fields
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+    
+    await user.save();
+
+    res.json({ success: true, message: 'Password successfully updated.' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: 'Server error during password reset.' });
+  }
+});
+
+
+router.post('/forgot-password', async (req, res) => {
+  try {
+    const { method, identifier } = req.body;
+
+    // Build dynamic query based on method
+    const query = method === 'email' ? { email: identifier } : { phone: identifier };
+    
+    // Find user
+    const user = await User.findOne(query);
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'Account not found.' });
+    }
+
+    // Generate secure token
+    const resetToken = crypto.randomBytes(16).toString('hex');
+    const resetTokenExpires = Date.now() + (60 * 60 * 1000); // 1 hour
+
+    // Save token to user document
+    user.resetPasswordToken = resetToken;
+    user.resetPasswordExpires = resetTokenExpires;
+    await user.save();
+
+    // In production: Send this token via Email (Nodemailer) or SMS (Twilio).
+    // For this demo, we return it to the frontend.
+    res.json({ 
+        success: true, 
+        message: 'Reset request processed.', 
+        resetToken: resetToken 
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: 'Server error processing request.' });
+  }
+});
 export default router;

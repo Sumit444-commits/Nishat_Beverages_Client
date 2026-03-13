@@ -1,159 +1,3 @@
-// /**
-//  * API Service for Nishat Beverages.
-//  * Replaces LocalStorage with calls to the MongoDB/Express Backend.
-//  */
-
-// const API_BASE_URL = "http://localhost:5000/api"; // Adjust to your server port
-
-// /**
-//  * Generic Fetch Wrapper with error handling
-//  */
-// const fetchAPI = async (endpoint, options = {}) => {
-//   try {
-//     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-//       headers: {
-//         "Content-Type": "application/json",
-//         ...options.headers,
-//       },
-//       ...options,
-//     });
-//     const result = await response.json();
-//     if (!result.success) throw new Error(result.message || "API Error");
-//     return result.data || result;
-//   } catch (error) {
-//     console.error(`❌ API Request Failed [${endpoint}]:`, error.message);
-//     throw error;
-//   }
-// };
-
-// export const apiService = {
-//   // ========== AUTH ==========
-//   login: (credentials) =>
-//     fetchAPI("/auth/login", {
-//       method: "POST",
-//       body: JSON.stringify(credentials),
-//     }),
-
-//   signup: (userData) =>
-//     fetchAPI("/auth/signup", {
-//       method: "POST",
-//       body: JSON.stringify(userData),
-//     }),
-
-//   // ========== CUSTOMERS ==========
-//   getCustomers: (params = {}) => {
-//     const query = new URLSearchParams(params).toString();
-//     return fetchAPI(`/customers?${query}`);
-//   },
-
-//   getCustomerById: (id) => fetchAPI(`/customers/${id}`),
-
-//   addCustomer: (customerData) =>
-//     fetchAPI("/customers", {
-//       method: "POST",
-//       body: JSON.stringify(customerData),
-//     }),
-
-//   updateCustomer: (id, updates) =>
-//     fetchAPI(`/customers/${id}`, {
-//       method: "PUT",
-//       body: JSON.stringify(updates),
-//     }),
-
-//   deleteCustomer: (id) => fetchAPI(`/customers/${id}`, { method: "DELETE" }),
-
-//   // ========== SALESMEN ==========
-//   getSalesmen: () => fetchAPI("/salesmen"),
-
-//   addSalesman: (salesmanData) =>
-//     fetchAPI("/salesmen", {
-//       method: "POST",
-//       body: JSON.stringify(salesmanData),
-//     }),
-//   updateSalesman: (id, updates) =>
-//     fetchAPI(`/salesmen/${id}`, {
-//       method: "PUT",
-//       body: JSON.stringify(updates),
-//     }),
-
-//   // ========== AREAS ==========
-//   getAreaAssignments: () => fetchAPI("/area-assignments"),
-
-//   addArea: (areaData) =>
-//     fetchAPI("/area-assignments", {
-//       method: "POST",
-//       body: JSON.stringify(areaData),
-//     }),
-
-//   updateArea: (id, updates) =>
-//     fetchAPI(`/area-assignments/${id}`, {
-//       method: "PUT",
-//       body: JSON.stringify(updates),
-//     }),
-
-// deleteArea: (id) => fetchAPI(`/area-assignments/${id}`, {
-//     method: 'DELETE'
-// }),
-//   // Add these to your apiService.js object:
-
-//   getInventory: () => fetchAPI("/inventory"),
-//   addInventoryItem: (itemData) =>
-//     fetchAPI("/inventory", {
-//       method: "POST",
-//       body: JSON.stringify(itemData),
-//     }),
-//   updateInventoryItem: (id, updates) =>
-//     fetchAPI(`/inventory/${id}`, {
-//       method: "PUT",
-//       body: JSON.stringify(updates),
-//     }),
-
-//   getSales: () => fetchAPI("/sales"),
-
-//   addSale: (saleData) =>
-//     fetchAPI("/sales", {
-//       method: "POST",
-//       body: JSON.stringify(saleData),
-//     }),
-
-//   deleteSale: (id) =>
-//     fetchAPI(`/sales/${id}`, {
-//       method: "DELETE",
-//     }),
-
-//   updateExpense: (id, updates) =>
-//     fetchAPI(`/expenses/${id}`, {
-//       method: "PUT",
-//       body: JSON.stringify(updates),
-//     }),
-//   deleteExpense: (id) =>
-//     fetchAPI(`/expenses/${id}`, {
-//       method: "DELETE",
-//     }),
-//   getExpenses: () => fetchAPI("/expenses"),
-//   addExpense: (expenseData) =>
-//     fetchAPI("/expenses", {
-//       method: "POST",
-//       body: JSON.stringify(expenseData),
-//     }),
-//   getExpenseOwners: () => fetchAPI("/expense-owners"),
-//   addExpenseOwner: (name) =>
-//     fetchAPI("/expense-owners", {
-//       method: "POST",
-//       body: JSON.stringify({ name }),
-//     }),
-//   // ========== ANALYTICS ==========
-//   getCustomerStats: () => fetchAPI("/customers/stats/summary"),
-//   getSalesmanStats: () => fetchAPI("/salesmen/stats/summary"),
-
-//   getCustomersAreas: () => fetchAPI("/customers/areas/list"),
-// };
-
-/**
- * API Service for Nishat Beverages.
- * Replaces LocalStorage with calls to the MongoDB/Express Backend.
- */
-
 const API_BASE_URL = "http://localhost:5000/api"; // Adjust to your server port
 
 /**
@@ -193,6 +37,18 @@ export const apiService = {
     fetchAPI("/auth/signup", {
       method: "POST",
       body: JSON.stringify(userData),
+    }),
+
+  resetPassword: (data) =>
+    fetchAPI("/auth/reset-password", {
+      method: "POST",
+      body: JSON.stringify(data), 
+    }),
+  
+    requestPasswordReset: (data) =>
+    fetchAPI("/auth/forgot-password", {
+      method: "POST",
+      body: JSON.stringify(data), // Sends { identifier: "...", method: "email" }
     }),
 
   // ========== CUSTOMERS ==========
