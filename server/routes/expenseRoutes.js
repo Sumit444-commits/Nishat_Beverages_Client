@@ -10,9 +10,6 @@ import { ExpenseOwner } from "../models/ExpenseOwner.js";
 const router = express.Router();
 
 
-
-
-
 // ========== EXPENSE OWNER ROUTES ========== //
 
 router.get("/expense-owners", async (req, res) => {

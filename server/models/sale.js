@@ -8,7 +8,7 @@ const saleSchema = new mongoose.Schema({
   emptiesCollected: { type: Number, default: 0 },
   amount: { type: Number, required: true },
   amountReceived: { type: Number, required: true },
-  paymentMethod: { type: String, enum: ['Cash', 'Bank'], default: 'Cash' },
+  paymentMethod: { type: String, enum: ['Cash', 'Bank','Pending'], default: 'Cash' },
   paymentForCategory: { type: String, default: 'Water Sale' },
   description: { type: String },
   date: { type: Date, default: Date.now },

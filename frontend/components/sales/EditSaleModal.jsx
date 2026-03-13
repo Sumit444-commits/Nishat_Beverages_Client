@@ -30,17 +30,25 @@ const EditSaleModal = ({ isOpen, onClose, onUpdateSale, sale, customers, salesme
     /**
      * Effect: Populate local state when the sale object is provided.
      */
+   /**
+     * Effect: Populate local state when the sale object is provided.
+     */
     useEffect(() => {
-       
         if (sale) {
-            setCustomerId(sale.customerId || '');
-            setSelectedInventoryItemId(sale.inventoryItemId?.toString() || '');
-            setQuantity(sale.quantity);
+            // 💡 FIX: Safely extract IDs using optional chaining (?.) to prevent crashes
+            const custId = sale.customerId?._id || sale.customerId || '';
+            const invId = sale.inventoryItemId?._id || sale.inventoryItemId || '';
+            const salesmId = sale.salesmanId?._id || sale.salesmanId || '';
+
+            setCustomerId(String(custId));
+            setSelectedInventoryItemId(String(invId));
+            setSalesmanId(String(salesmId));
+            
+            setQuantity(sale.quantity || 0);
             setEmptiesCollected(sale.emptiesCollected || 0);
-            setPaymentMethod(sale.paymentMethod);
-            setSalesmanId(sale.salesmanId ? sale.salesmanId._id : '');
-            setDate(sale.date.split('T')[0]);
-            setAmountReceived(sale.amountReceived);
+            setPaymentMethod(sale.paymentMethod || 'Pending');
+            setDate(sale.date ? sale.date.split('T')[0] : '');
+            setAmountReceived(sale.amountReceived || 0);
             
             if (sale.quantity > 0 && sale.amount > 0) {
                 setUnitPrice(sale.amount / sale.quantity);
@@ -66,8 +74,7 @@ const EditSaleModal = ({ isOpen, onClose, onUpdateSale, sale, customers, salesme
             date: new Date(date).toISOString(),
             paymentMethod,
         };
-        
-  
+//   console.log(updatedSale)
         onUpdateSale(updatedSale);
         onClose();
     };

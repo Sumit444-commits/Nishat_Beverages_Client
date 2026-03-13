@@ -571,6 +571,7 @@ const Dashboard = ({ user, onLogout }) => {
             await apiService.addDailyReminder({
                 customerId: summary.customerId,
                 message: message,
+                date: summary.date || new Date().toISOString()
             });
             toast.success("Reminder logged.");
             await fetchAllData();
@@ -585,6 +586,7 @@ const Dashboard = ({ user, onLogout }) => {
              await apiService.addDailyReminder({
                 customerId: selectedCustomer._id || selectedCustomer.id,
                 message: message,
+                date: new Date().toISOString()
             });
             toast.success("Summary logged.");
             await fetchAllData();

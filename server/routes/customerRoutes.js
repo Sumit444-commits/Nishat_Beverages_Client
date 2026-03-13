@@ -1,7 +1,44 @@
 import express from "express";
 import { Customer } from "../models/Customer.js";
+import { Salesman } from "../models/Salesman.js";
+import { AreaAssignment } from "../models/AreaAssignment.js";
 
 const router = express.Router();
+
+async function updateSalesmanCustomerCount(salesmanId) {
+  try {
+    const customerCount = await Customer.countDocuments({
+      salesmanId: salesmanId?.toString(),
+      isActive: true,
+    });
+    await Salesman.findByIdAndUpdate(salesmanId, {
+      customersAssigned: customerCount,
+    });
+  } catch (error) {
+    console.error("Error updating salesman customer count:", error);
+  }
+}
+
+async function updateAreaCustomerCount(areaName) {
+  try {
+    const area = await AreaAssignment.findOne({
+      area: areaName,
+      isActive: true,
+    });
+    if (area) {
+      const customerCount = await Customer.countDocuments({
+        area: areaName,
+        isActive: true,
+      });
+      area.customerCount = customerCount;
+      await area.save();
+    }
+  } catch (error) {
+    console.error("Error updating area customer count:", error);
+  }
+}
+
+
 
 // ========== CUSTOMER ROUTES ========== //
 router.get("/customers", async (req, res) => {

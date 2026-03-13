@@ -164,10 +164,10 @@ const AddCustomerModal = ({
             };
 
             // Call the centralized API Service
-            const newCustomer = await apiService.addCustomer(customerData);
+            // const newCustomer = await apiService.addCustomer(customerData);
 
-            toast.success('Customer added successfully!');
-            onAddCustomer(newCustomer); // Pass the newly created DB object back to Dashboard
+            // toast.success('Customer added successfully!');
+           await onAddCustomer(customerData); // Pass the newly created DB object back to Dashboard
             
             setTimeout(() => {
                 resetForm();

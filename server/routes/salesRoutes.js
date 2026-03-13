@@ -33,8 +33,12 @@ router.get("/sales", async (req, res) => {
 
 router.post("/sales", async (req, res) => {
   try {
-    const saleData = req.body;
+const saleData = { ...req.body };
 
+    // 💡 THE FIX: Sanitize empty strings to null to prevent Mongoose CastErrors
+    if (!saleData.customerId || saleData.customerId === "") saleData.customerId = null;
+    if (!saleData.salesmanId || saleData.salesmanId === "") saleData.salesmanId = null;
+    if (!saleData.inventoryItemId || saleData.inventoryItemId === "") saleData.inventoryItemId = null;
     const newSale = new Sale(saleData);
     await newSale.save();
 
@@ -57,9 +61,15 @@ router.post("/sales", async (req, res) => {
 
 router.put('/sales/:id', async (req, res) => {
   try {
+    const saleData = { ...req.body };
+    
+    // 💡 THE FIX: Sanitize empty strings to null to prevent Mongoose CastErrors
+    if (!saleData.customerId || saleData.customerId === "") saleData.customerId = null;
+    if (!saleData.salesmanId || saleData.salesmanId === "") saleData.salesmanId = null;
+    if (!saleData.inventoryItemId || saleData.inventoryItemId === "") saleData.inventoryItemId = null;
     const sale = await Sale.findByIdAndUpdate(
       req.params.id, 
-      req.body, 
+      saleData, 
       { new: true, runValidators: true } // Returns the updated document
     );
     

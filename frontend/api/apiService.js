@@ -27,6 +27,7 @@ const fetchAPI = async (endpoint, options = {}) => {
 
 export const apiService = {
   // ========== AUTH ==========
+  // ========== AUTH ==========
   login: (credentials) =>
     fetchAPI("/auth/login", {
       method: "POST",
