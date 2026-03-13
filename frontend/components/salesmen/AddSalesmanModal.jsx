@@ -80,11 +80,7 @@ const AddSalesmanModal = ({ isOpen, onClose, onAddSalesman }) => {
                 notes: notes.trim()
             };
 
-            // Hit the Express API via the centralized service
-            const newSalesman = await apiService.addSalesman(salesmanData);
-
-            toast.success('Salesman added successfully!');
-            onAddSalesman(newSalesman); // Pass the new DB object to the parent
+            onAddSalesman(salesmanData); // Pass the new DB object to the parent
             
             setTimeout(() => {
                 resetForm();
