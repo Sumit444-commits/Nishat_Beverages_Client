@@ -13,7 +13,7 @@ import { apiService } from '../../api/apiService';
  * @param {Function} props.showSignup - Navigates to the signup view.
  * @param {Function} props.onForgotPassword - Navigates to the forgot password modal.
  */
-const Login = ({ onLogin, showSignup, onForgotPassword }) => {
+const Login = ({ onLogin, onForgotPassword }) => {
   const [identifier, setIdentifier] = useState(''); // Email or Phone
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -200,7 +200,7 @@ const Login = ({ onLogin, showSignup, onForgotPassword }) => {
           </div>
         </form>
         
-        <p className="mt-4 text-center text-sm text-brand-text-secondary">
+        {/* <p className="mt-4 text-center text-sm text-brand-text-secondary">
           Don't have an account?{' '}
           <button 
             onClick={showSignup} 
@@ -209,7 +209,7 @@ const Login = ({ onLogin, showSignup, onForgotPassword }) => {
           >
             Sign up
           </button>
-        </p>
+        </p> */}
       </div>
     </div>
   );

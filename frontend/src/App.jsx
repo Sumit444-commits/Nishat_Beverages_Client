@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import RoleSelection from "../components/auth/RoleSelection";
 import Login from "../components/auth/Login";
-import Signup from "../components/auth/Signup";
+// import Signup from "../components/auth/Signup";
 import Dashboard from "../components/dashboard/Dashboard";
 import ForgotPasswordModal from "../components/auth/ForgotPasswordModal";
 import CounterLoginNew from "../components/auth/CounterLoginNew";
@@ -127,17 +127,17 @@ const App = () => {
         return (
           <Login
             onLogin={handleAdminLogin}
-            showSignup={() => setAuthState("adminSignup")}
+            // showSignup={() => setAuthState("adminSignup")}
             onForgotPassword={() => setForgotPasswordOpen(true)}
           />
         );
-      case "adminSignup":
-        return (
-          <Signup
-            onSignup={() => setAuthState("adminLogin")}
-            showLogin={() => setAuthState("adminLogin")}
-          />
-        );
+      // case "adminSignup":
+      //   return (
+      //     <Signup
+      //       onSignup={() => setAuthState("adminLogin")}
+      //       showLogin={() => setAuthState("adminLogin")}
+      //     />
+      //   );
       case "counterLogin":
         return (
           <CounterLoginNew
