@@ -34,6 +34,7 @@ app.use(
       "http://localhost:3000",
       "http://localhost:5173",
       "http://localhost:8080",
+      "https://nishat-beverages-app.vercel.app",
       process.env.backend_url,
       process.env.frontend_url
     ],
