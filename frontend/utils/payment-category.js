@@ -2,7 +2,7 @@
  * Regex patterns to identify bottle sizes in item names.
  */
 const NINETEEN_LTR_REGEX = /19\s*(ltr|liter|litre)/i;
-const SIX_LTR_REGEX = /6\s*(ltr|liter|litre)/i;
+const SIX_LTR_REGEX = /6\s*(l|ltr|liter|litre)/i;
 
 /**
  * Checks if a name matches 19L bottle patterns.

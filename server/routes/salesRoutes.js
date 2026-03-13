@@ -2,16 +2,14 @@
 
 // import { InventoryItem } from "../models/InventoryItem.js";
 // import { Sale } from "../models/sale.js";
-
+// import { Customer } from "../models/Customer.js"; // 👈 1. CRITICAL: Import Customer Model!
 
 // const router = express.Router();
 // // ========== SALES ROUTES ========== //
 
-// // Inside your Express backend (routes/sales.js)
 // router.get("/sales", async (req, res) => {
 //   try {
 //     const sales = await Sale.find({ isActive: true })
-//       // Populating grabs the actual name from the related collections!
 //       .populate("customerId", "name") 
 //       .populate("salesmanId", "name")
 //       .populate("inventoryItemId", "name")
@@ -33,12 +31,13 @@
 
 // router.post("/sales", async (req, res) => {
 //   try {
-// const saleData = { ...req.body };
+//     const saleData = { ...req.body };
 
-//     // 💡 THE FIX: Sanitize empty strings to null to prevent Mongoose CastErrors
+//     // Sanitize empty strings to null to prevent Mongoose CastErrors
 //     if (!saleData.customerId || saleData.customerId === "") saleData.customerId = null;
 //     if (!saleData.salesmanId || saleData.salesmanId === "") saleData.salesmanId = null;
 //     if (!saleData.inventoryItemId || saleData.inventoryItemId === "") saleData.inventoryItemId = null;
+    
 //     const newSale = new Sale(saleData);
 //     await newSale.save();
 
@@ -46,6 +45,19 @@
 //     if (newSale.inventoryItemId && newSale.quantity > 0) {
 //       await InventoryItem.findByIdAndUpdate(newSale.inventoryItemId, {
 //         $inc: { stock: -newSale.quantity },
+//       });
+//     }
+
+//     // 💡 2. THE FIX: Update the Customer's Total Balance!
+//     if (newSale.customerId) {
+//       const amountBilled = Number(newSale.amount) || 0;
+//       const amountPaid = Number(newSale.amountReceived) || 0;
+      
+//       // Calculate how much the balance should change (Bill - Paid)
+//       const balanceChange = amountBilled - amountPaid; 
+
+//       await Customer.findByIdAndUpdate(newSale.customerId, {
+//         $inc: { totalBalance: balanceChange } // Updates the balance in the DB
 //       });
 //     }
 
@@ -63,14 +75,15 @@
 //   try {
 //     const saleData = { ...req.body };
     
-//     // 💡 THE FIX: Sanitize empty strings to null to prevent Mongoose CastErrors
+//     // Sanitize empty strings to null to prevent Mongoose CastErrors
 //     if (!saleData.customerId || saleData.customerId === "") saleData.customerId = null;
 //     if (!saleData.salesmanId || saleData.salesmanId === "") saleData.salesmanId = null;
 //     if (!saleData.inventoryItemId || saleData.inventoryItemId === "") saleData.inventoryItemId = null;
+    
 //     const sale = await Sale.findByIdAndUpdate(
 //       req.params.id, 
 //       saleData, 
-//       { new: true, runValidators: true } // Returns the updated document
+//       { new: true, runValidators: true } 
 //     );
     
 //     if (!sale) {
@@ -104,13 +117,25 @@
 //       });
 //     }
 
+//     // 💡 3. THE FIX: Reverse the Customer's Balance when deleting a transaction!
+//     if (sale.customerId) {
+//       const amountBilled = Number(sale.amount) || 0;
+//       const amountPaid = Number(sale.amountReceived) || 0;
+      
+//       // Calculate what the effect WAS, so we can reverse it
+//       const balanceChangeToReverse = amountBilled - amountPaid;
+
+//       await Customer.findByIdAndUpdate(sale.customerId, {
+//         $inc: { totalBalance: -balanceChangeToReverse } // Notice the negative sign!
+//       });
+//     }
+
 //     res.json({ success: true, message: "Sale deleted and stock restored" });
 //   } catch (error) {
 //     console.error("Error deleting sale:", error);
 //     res.status(500).json({ success: false, message: "Failed to delete sale" });
 //   }
 // });
-
 
 // export default router;
 
@@ -165,16 +190,25 @@ router.post("/sales", async (req, res) => {
       });
     }
 
-    // 💡 2. THE FIX: Update the Customer's Total Balance!
+    // 💡 2. THE FIX: Update BOTH Total Balance AND Empty Bottles!
     if (newSale.customerId) {
+      // Financial Math
       const amountBilled = Number(newSale.amount) || 0;
       const amountPaid = Number(newSale.amountReceived) || 0;
-      
-      // Calculate how much the balance should change (Bill - Paid)
       const balanceChange = amountBilled - amountPaid; 
 
+      // Physical Bottles Math
+      const bottlesGiven = Number(newSale.quantity) || 0;
+      const emptiesReturned = Number(newSale.emptiesCollected) || 0;
+      const emptiesChange = bottlesGiven - emptiesReturned;
+
       await Customer.findByIdAndUpdate(newSale.customerId, {
-        $inc: { totalBalance: balanceChange } // Updates the balance in the DB
+        $inc: { 
+            totalBalance: balanceChange,
+            emptyBottlesHeld: emptiesChange 
+        },
+        // If they returned empties today, update the "last collection" date
+        ...(emptiesReturned > 0 && { lastEmptiesCollectionDate: new Date() })
       });
     }
 
@@ -234,16 +268,23 @@ router.delete("/sales/:id", async (req, res) => {
       });
     }
 
-    // 💡 3. THE FIX: Reverse the Customer's Balance when deleting a transaction!
+    // 💡 3. THE FIX: Reverse BOTH the Balance and the Empties!
     if (sale.customerId) {
+      // Financial Reversal
       const amountBilled = Number(sale.amount) || 0;
       const amountPaid = Number(sale.amountReceived) || 0;
-      
-      // Calculate what the effect WAS, so we can reverse it
       const balanceChangeToReverse = amountBilled - amountPaid;
 
+      // Physical Bottles Reversal
+      const bottlesGiven = Number(sale.quantity) || 0;
+      const emptiesReturned = Number(sale.emptiesCollected) || 0;
+      const emptiesChangeToReverse = bottlesGiven - emptiesReturned;
+
       await Customer.findByIdAndUpdate(sale.customerId, {
-        $inc: { totalBalance: -balanceChangeToReverse } // Notice the negative sign!
+        $inc: { 
+            totalBalance: -balanceChangeToReverse,
+            emptyBottlesHeld: -emptiesChangeToReverse 
+        } 
       });
     }
 

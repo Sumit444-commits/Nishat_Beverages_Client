@@ -276,7 +276,7 @@ const Dashboard = ({ user, onLogout }) => {
     const todayPayments = db.sales.filter(
       (s) => s.date && getLocalDateString(s.date) === financialDate,
     );
-
+    // console.log(todayPayments)
     const todaySalesmanPayments = (db.salesmanPayments || []).filter(
       (p) => p.date && getLocalDateString(p.date) === financialDate,
     );
@@ -284,9 +284,8 @@ const Dashboard = ({ user, onLogout }) => {
       (sum, p) => sum + (Number(p.amount) || 0),
       0,
     );
-
-    const collection19L = todayPayments
-      .filter((s) => {
+    const collection19 = todayPayments
+    .filter((s) => {
         const sId = String(s.inventoryItemId?._id || s.inventoryItemId);
         const item = sId
           ? db.inventory.find((i) => String(i._id || i.id) === sId)
@@ -295,9 +294,9 @@ const Dashboard = ({ user, onLogout }) => {
           (item && is19LItemName(item.name)) ||
           s.paymentForCategory === "19Ltr Collection"
         );
-      })
-      .reduce((sum, s) => sum + (Number(s.amountReceived) || 0), 0);
-
+    })
+    .reduce((sum, s) => sum + (Number(s.amountReceived) || 0), 0);
+   
     const collection6L = todayPayments
       .filter((s) => {
         const sId = String(s.inventoryItemId?._id || s.inventoryItemId);
@@ -314,14 +313,17 @@ const Dashboard = ({ user, onLogout }) => {
     const counterSale = todaySales
       .filter((s) => !s.customerId)
       .reduce((sum, s) => sum + (Number(s.amountReceived) || 0), 0);
-
+    
     const totalRevenueToday =
       todayPayments.reduce(
         (sum, s) => sum + (Number(s.amountReceived) || 0),
         0,
       ) - totalSalesmanPaymentsToday;
-    const grandTotal = openingBalance + totalRevenueToday;
+    
+    const collection19L = totalRevenueToday - counterSale ;
 
+    const grandTotal = openingBalance + totalRevenueToday;
+    
     return {
       openingBalance,
       collection19L,
