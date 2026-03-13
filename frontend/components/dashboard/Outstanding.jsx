@@ -193,18 +193,20 @@ import toast from 'react-hot-toast';
 
 /**
  * Component to track and manage customers with unpaid balances.
- * Features sorting, searching, and quick WhatsApp reminders.
+ * Features sorting, searching, and detailed WhatsApp reminders.
  * @param {Object} props
  * @param {Array} props.customers - List of customers with balances.
+ * @param {Array} props.sales - Global sales array for day-by-day history.
+ * @param {Array} props.inventory - Global inventory array to get item names.
  */
-const Outstanding = ({ customers = [] }) => {
+const Outstanding = ({ customers = [], sales = [], inventory = [] }) => {
     const [sortKey, setSortKey] = useState('totalBalance');
     const [sortDirection, setSortDirection] = useState('desc');
     const [searchTerm, setSearchTerm] = useState('');
 
     /**
      * Opens WhatsApp with a beautifully formatted, detailed debt reminder.
-     * Safely formats Pakistani phone numbers.
+     * Includes Total Purchased and Day-by-Day recent activity.
      */
     const openWhatsApp = (customer) => {
         if (!customer.mobile) {
@@ -212,20 +214,59 @@ const Outstanding = ({ customers = [] }) => {
             return;
         }
 
-        // 1. Build the beautifully formatted, detailed message
+        // 1. Get the customer's specific sales history
+        const customerIdStr = String(customer._id || customer.id);
+        const customerSales = sales
+            .filter(s => String(s.customerId?._id || s.customerId) === customerIdStr)
+            .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()); // Chronological
+
+        // 2. Calculate Lifetime Total Purchased (Bottles)
+        const lifetimeBottles = customerSales.reduce((sum, s) => sum + (Number(s.quantity) || 0), 0);
+
+        // 3. Build Day-by-Day Activity (Last 5 transactions so the text isn't too massive)
+        const recentActivity = customerSales.slice(-5);
+        let dayByDayText = '';
+        
+        if (recentActivity.length > 0) {
+            dayByDayText = `📅 *Recent Activity (Last ${recentActivity.length}):*\n`;
+            recentActivity.forEach(s => {
+                const date = new Date(s.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }); // e.g., "13 Mar"
+                
+                // Determine item name or if it was a payment
+                let itemName = s.description || 'Payment';
+                if (s.inventoryItemId) {
+                    const iId = String(s.inventoryItemId._id || s.inventoryItemId);
+                    const foundItem = inventory.find(i => String(i._id || i.id) === iId);
+                    if (foundItem) itemName = foundItem.name;
+                }
+
+                const qtyStr = s.quantity > 0 ? ` x${s.quantity}` : '';
+                const billAmt = Number(s.amount) || 0;
+                const paidAmt = Number(s.amountReceived) || 0;
+                
+                // Show if it was a bill added or a payment made
+                const transactionDetail = billAmt > 0 ? `Bill: ${billAmt}` : `Paid: ${paidAmt}`;
+
+                dayByDayText += `• ${date} | ${itemName}${qtyStr} | ${transactionDetail}\n`;
+            });
+            dayByDayText += `-----------------------------------\n\n`;
+        }
+
+        // 4. Build the final beautifully formatted message
         const message = `*Nishat Beverages - Payment Reminder*\n\n` +
                         `Dear *${customer.name}*,\n\n` +
                         `This is a friendly reminder regarding your account. Here is your detailed summary as of today (${new Date().toLocaleDateString()}):\n\n` +
                         `-----------------------------------\n` +
                         `🧾 *Total Outstanding Balance:* PKR ${Number(customer.totalBalance).toLocaleString()}\n` +
+                        `📦 *Lifetime Bottles Purchased:* ${lifetimeBottles}\n` +
                         `🔄 *Empty Bottles Held:* ${Number(customer.emptyBottlesHeld || 0)}\n` +
-                        `📍 *Delivery Area:* ${customer.area || 'N/A'}\n` +
-                        `-----------------------------------\n\n` +
+                        `-----------------------------------\n` +
+                        dayByDayText + 
                         `Please arrange payment at your earliest convenience to maintain uninterrupted service. \n\n` +
                         `If you have recently cleared your balance, kindly ignore this message.\n\n` +
                         `Thank you for your business!\n*Nishat Beverages*`;
 
-        // 2. Safely format the phone number (converts 03xx to 923xx)
+        // 5. Safely format the phone number (converts 03xx to 923xx)
         let cleanNumber = customer.mobile.replace(/\D/g, '');
         if (cleanNumber.startsWith('0')) {
             cleanNumber = '92' + cleanNumber.substring(1);
@@ -233,7 +274,7 @@ const Outstanding = ({ customers = [] }) => {
             cleanNumber = '92' + cleanNumber;
         }
 
-        // 3. Open WhatsApp
+        // 6. Open WhatsApp
         if (cleanNumber) {
             const url = `https://wa.me/${cleanNumber}?text=${encodeURIComponent(message)}`;
             window.open(url, '_blank', 'noopener,noreferrer');
@@ -246,7 +287,6 @@ const Outstanding = ({ customers = [] }) => {
      * Filters and sorts the customer list based on UI state.
      */
     const sortedCustomers = useMemo(() => {
-        // First, filter down to ONLY customers who actually have a balance
         const withBalance = customers.filter(c => (Number(c.totalBalance) || 0) > 0);
 
         const filtered = withBalance.filter(c => {
