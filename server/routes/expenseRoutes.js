@@ -1,11 +1,6 @@
 import express from "express";
-import { Customer } from "../models/Customer.js";
-import { Salesman } from "../models/Salesman.js";
-import { InventoryItem } from "../models/InventoryItem.js";
-import { Sale } from "../models/sale.js";
-import { AreaAssignment } from "../models/AreaAssignment.js";
-import { Expense } from "../models/Expense.js";
-import { ExpenseOwner } from "../models/ExpenseOwner.js";
+import { Expense } from "../models/ExpenseModel.js";
+import { ExpenseOwner } from "../models/ExpenseOwnerModel.js";
 
 const router = express.Router();
 

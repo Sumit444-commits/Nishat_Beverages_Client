@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 import mongoose from "mongoose";
 
 // app routes imports
-import appRoutes from "./routes/app-routes.js";
+import appRoutes from "./routes/appRoutes.js";
 import authRoutes from './routes/authRoutes.js';
 import customerRoutes from './routes/customerRoutes.js';
 import salesmenRoutes from './routes/salesmenRoutes.js';
@@ -12,12 +12,12 @@ import inventoryRoutes from './routes/inventoryRoutes.js';
 import salesRoutes from './routes/salesRoutes.js';
 import expenseRoutes from './routes/expenseRoutes.js';
 import areaAssignmentRoutes from './routes/areaAssignmentRoutes.js';
-import openingBalanceRoutes from './routes/openingBalances.js';
-import closingRecordRoutes from './routes/closingRecords.js';
-import dailyAssignmentRoutes from './routes/dailyAssignments.js';
-import salesmanPaymentRoutes from './routes/salesmanPayments.js';
-import stockAdjustmentRoutes from './routes/stockAdjustments.js';
-import dailyReminderRoutes from './routes/dailyReminders.js';
+import openingBalanceRoutes from './routes/openingBalancesRoutes.js';
+import closingRecordRoutes from './routes/closingRecordsRoutes.js';
+import dailyAssignmentRoutes from './routes/dailyAssignmentsRoutes.js';
+import salesmanPaymentRoutes from './routes/salesmanPaymentsRoutes.js';
+import stockAdjustmentRoutes from './routes/stockAdjustmentsRoutes.js';
+import dailyReminderRoutes from './routes/dailyRemindersRoutes.js';
 
 // Import the database connection module
 import { connectDB } from "./config/db.js";

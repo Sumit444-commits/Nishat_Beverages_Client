@@ -1,10 +1,8 @@
 import express from "express";
-import { InventoryItem } from "../models/InventoryItem.js";
+import { InventoryItem } from "../models/InventoryItemModel.js";
 
 
 const router = express.Router();
-
-
 
 // ========== INVENTORY ROUTES ========== //
 

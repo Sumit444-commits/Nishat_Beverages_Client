@@ -1,6 +1,6 @@
 
 import express from 'express';
-import DailyAssignment from '../models/DailyAssignment.js'; // <-- Notice the .js extension!
+import DailyAssignment from '../models/DailyAssignmentModel.js'; 
 
 const router = express.Router();
 router.get('/', async (req, res) => {

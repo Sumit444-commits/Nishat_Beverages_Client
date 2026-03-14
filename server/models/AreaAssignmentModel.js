@@ -27,9 +27,5 @@ const areaAssignmentSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// // Indexes for better performance
-// areaAssignmentSchema.index({ area: 1 });
-// areaAssignmentSchema.index({ salesmanId: 1 });
-// areaAssignmentSchema.index({ isActive: 1 });
 
 export const AreaAssignment = mongoose.model('AreaAssignment', areaAssignmentSchema);

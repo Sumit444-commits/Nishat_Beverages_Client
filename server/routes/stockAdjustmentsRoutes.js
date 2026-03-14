@@ -1,18 +1,17 @@
 import express from 'express';
-import SalesmanPayment from '../models/SalesmanPayment.js'; // <-- Notice the .js extension!
-
+import StockAdjustment from '../models/StockAdjustmentModel.js';
 const router = express.Router();
 
 router.get('/', async (req, res) => {
   try {
-    const records = await SalesmanPayment.find();
+    const records = await StockAdjustment.find();
     res.json({ success: true, data: records });
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
 router.post('/', async (req, res) => {
   try {
-    const record = await SalesmanPayment.create(req.body);
+    const record = await StockAdjustment.create(req.body);
     res.status(201).json({ success: true, data: record });
   } catch (err) { res.status(400).json({ success: false, message: err.message }); }
 });

@@ -1,5 +1,5 @@
 import express from 'express';
-import OpeningBalance from '../models/OpeningBalance.js'; // <-- Notice the .js extension!
+import OpeningBalance from '../models/OpeningBalanceModel.js'; 
 
 const router = express.Router();
 
