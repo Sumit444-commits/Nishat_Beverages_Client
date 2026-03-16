@@ -69,6 +69,8 @@ router.get("/customers", async (req, res) => {
       updatedAt: customer.updatedAt.toISOString(),
     }));
 
+    
+
     res.json({
       success: true,
       data: formattedCustomers,
@@ -192,13 +194,14 @@ router.post("/customers", async (req, res) => {
       area: area.trim(),
       salesmanId:
         salesmanId === "unassigned" || !salesmanId ? null : salesmanId,
-      totalBalance: parseFloat(totalBalance) || 0,
+      totalBalance: 0,
       deliveryFrequencyDays: parseInt(deliveryFrequencyDays) || 1,
       emptyBottlesHeld: parseInt(emptyBottlesHeld) || 0,
       notes: notes.trim(),
       isActive: true,
       lastEmptiesCollectionDate: null,
     });
+
 
     await customer.save();
     console.log("✅ Customer created successfully:", customer._id);
@@ -219,7 +222,7 @@ router.post("/customers", async (req, res) => {
       mobile: customer.mobile,
       area: customer.area,
       salesmanId: customer.salesmanId,
-      totalBalance: customer.totalBalance,
+      totalBalance: parseFloat(totalBalance) || 0,
       totalBottlesPurchased: customer.totalBottlesPurchased,
       deliveryFrequencyDays: customer.deliveryFrequencyDays,
       emptyBottlesHeld: customer.emptyBottlesHeld,
@@ -231,7 +234,7 @@ router.post("/customers", async (req, res) => {
       createdAt: customer.createdAt.toISOString(),
       updatedAt: customer.updatedAt.toISOString(),
     };
-
+    
     res.status(201).json({
       success: true,
       message: "Customer added successfully",

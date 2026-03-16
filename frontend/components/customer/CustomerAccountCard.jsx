@@ -33,7 +33,7 @@ const CustomerAccountCard = ({
     const totalItemsPurchased = sales
         .filter(s => s.customerId === customerId)
         .reduce((sum, s) => sum + s.quantity, 0);
-
+    console.log(customer)
     const openWhatsApp = (mobile) => {
         // Remove non-numeric characters for the WhatsApp API link
         const url = `https://wa.me/${mobile.replace(/\D/g, '')}`;
