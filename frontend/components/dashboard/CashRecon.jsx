@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { is19LItemName, is6LItemName } from '../../utils/payment-category';
 import { getLocalDateString, getTodayLocalDateString } from '../../utils/date';
@@ -54,6 +55,7 @@ const CashRecon = ({ sales = [], expenses = [], inventory = [], openingBalances 
         const bottle19L = inventory.find(i => is19LItemName(i.name));
         const bottle6L = inventory.find(i => is6LItemName(i.name));
         
+        
         // Ensure IDs are extracted as strings for reliable comparisons
         const bottle19LId = bottle19L ? String(bottle19L._id || bottle19L.id) : null;
         const bottle6LId = bottle6L ? String(bottle6L._id || bottle6L.id) : null;
@@ -74,17 +76,19 @@ const CashRecon = ({ sales = [], expenses = [], inventory = [], openingBalances 
             const method = s.paymentMethod;
             const sId = s.inventoryItemId ? String(s.inventoryItemId._id || s.inventoryItemId) : null;
 
+            // 💡 THE FIX: Added "sId &&" to prevent "null === null" matching!
+            
             // Sort into 19L Bucket
-            if (sId === bottle19LId || s.paymentForCategory === '19Ltr Collection') {
+            if ((sId && sId === bottle19LId) || s.paymentForCategory === '19Ltr Collection') {
                 if (method === 'Cash') c19Cash += amount;
                 if (method === 'Bank') c19Bank += amount;
             } 
             // Sort into 6L Bucket
-            else if (sId === bottle6LId || s.paymentForCategory === '6Ltr Collection') {
+            else if ((sId && sId === bottle6LId) || s.paymentForCategory === '6Ltr Collection') {
                 if (method === 'Cash') c6Cash += amount;
                 if (method === 'Bank') c6Bank += amount;
             } 
-            // 💡 Sort into "Other/Counter Sale" Bucket (Safely catches Manual Sales where sId === null!)
+            // Sort into "Other/Counter Sale" Bucket
             else {
                 if (method === 'Cash') otherCash += amount;
                 if (method === 'Bank') otherBank += amount;
@@ -94,7 +98,8 @@ const CashRecon = ({ sales = [], expenses = [], inventory = [], openingBalances 
         const collection19L = { cash: c19Cash, bank: c19Bank, total: c19Cash + c19Bank };
         const collection6L = { cash: c6Cash, bank: c6Bank, total: c6Cash + c6Bank };
         const counterSale = { cash: otherCash, bank: otherBank, total: otherCash + otherBank };
-
+        
+    
         const totalRevenue = {
             cash: collection19L.cash + collection6L.cash + counterSale.cash,
             bank: collection19L.bank + collection6L.bank + counterSale.bank,
