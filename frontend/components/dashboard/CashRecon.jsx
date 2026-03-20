@@ -58,55 +58,42 @@ const CashRecon = ({ sales = [], expenses = [], inventory = [], openingBalances 
         const bottle19LId = bottle19L ? String(bottle19L._id || bottle19L.id) : null;
         const bottle6LId = bottle6L ? String(bottle6L._id || bottle6L.id) : null;
 
-        const calcRevenue = (itemId) => {
-            if (!itemId) {
-                const productSales = todaySales.filter(s => !s.inventoryItemId && s.quantity > 0);
-                const productCash = productSales.filter(s => s.paymentMethod === 'Cash').reduce((sum, s) => sum + (Number(s.amountReceived) || 0), 0);
-                const productBank = productSales.filter(s => s.paymentMethod === 'Bank').reduce((sum, s) => sum + (Number(s.amountReceived) || 0), 0);
-                return { cash: productCash, bank: productBank, total: productCash + productBank };
-            }
+        // 💡 THE FIX: Clean, bug-proof Revenue Bucket calculation
+        let c19Cash = 0, c19Bank = 0;
+        let c6Cash = 0, c6Bank = 0;
+        let otherCash = 0, otherBank = 0;
 
-            const targetIdStr = String(itemId);
-            const productSales = todaySales.filter(s => {
-                const sId = s.inventoryItemId ? String(s.inventoryItemId._id || s.inventoryItemId) : null;
-                return sId === targetIdStr;
-            });
+        todaySales.forEach(s => {
+            // Ignore pending bills/debts (no money was collected)
+            if (s.paymentMethod === 'Pending') return; 
             
-            const productCash = productSales.filter(s => s.paymentMethod === 'Cash').reduce((sum, s) => sum + (Number(s.amountReceived) || 0), 0);
-            const productBank = productSales.filter(s => s.paymentMethod === 'Bank').reduce((sum, s) => sum + (Number(s.amountReceived) || 0), 0);
+            // Sometimes manual counter sales only have `amount` instead of `amountReceived`. Safe fallback.
+            const amount = Number(s.amountReceived) || Number(s.amount) || 0;
+            if (amount <= 0) return;
 
-            const paymentOnlyForItem = todaySales.filter(s => !s.inventoryItemId && s.quantity === 0 && s.amount === 0);
-            const payments19L = paymentOnlyForItem.filter(s => s.paymentForCategory === '19Ltr Collection');
-            const payments6L = paymentOnlyForItem.filter(s => s.paymentForCategory === '6Ltr Collection');
-
-            const extraCash = (targetIdStr === bottle19LId)
-                ? payments19L.filter(s => s.paymentMethod === 'Cash').reduce((sum, s) => sum + (Number(s.amountReceived) || 0), 0)
-                : (targetIdStr === bottle6LId)
-                    ? payments6L.filter(s => s.paymentMethod === 'Cash').reduce((sum, s) => sum + (Number(s.amountReceived) || 0), 0)
-                    : 0;
-
-            const extraBank = (targetIdStr === bottle19LId)
-                ? payments19L.filter(s => s.paymentMethod === 'Bank').reduce((sum, s) => sum + (Number(s.amountReceived) || 0), 0)
-                : (targetIdStr === bottle6LId)
-                    ? payments6L.filter(s => s.paymentMethod === 'Bank').reduce((sum, s) => sum + (Number(s.amountReceived) || 0), 0)
-                    : 0;
-
-            const cash = productCash + extraCash;
-            const bank = productBank + extraBank;
-            return { cash, bank, total: cash + bank };
-        };
-
-        const collection19L = calcRevenue(bottle19LId);
-        const collection6L = calcRevenue(bottle6LId);
-        
-        const otherSales = todaySales.filter(s => {
+            const method = s.paymentMethod;
             const sId = s.inventoryItemId ? String(s.inventoryItemId._id || s.inventoryItemId) : null;
-            return sId !== bottle19LId && sId !== bottle6LId && sId !== null;
+
+            // Sort into 19L Bucket
+            if (sId === bottle19LId || s.paymentForCategory === '19Ltr Collection') {
+                if (method === 'Cash') c19Cash += amount;
+                if (method === 'Bank') c19Bank += amount;
+            } 
+            // Sort into 6L Bucket
+            else if (sId === bottle6LId || s.paymentForCategory === '6Ltr Collection') {
+                if (method === 'Cash') c6Cash += amount;
+                if (method === 'Bank') c6Bank += amount;
+            } 
+            // 💡 Sort into "Other/Counter Sale" Bucket (Safely catches Manual Sales where sId === null!)
+            else {
+                if (method === 'Cash') otherCash += amount;
+                if (method === 'Bank') otherBank += amount;
+            }
         });
-        
-        const counterSaleCash = otherSales.filter(s => s.paymentMethod === 'Cash').reduce((sum, s) => sum + (Number(s.amountReceived) || 0), 0);
-        const counterSaleBank = otherSales.filter(s => s.paymentMethod === 'Bank').reduce((sum, s) => sum + (Number(s.amountReceived) || 0), 0);
-        const counterSale = { cash: counterSaleCash, bank: counterSaleBank, total: counterSaleCash + counterSaleBank };
+
+        const collection19L = { cash: c19Cash, bank: c19Bank, total: c19Cash + c19Bank };
+        const collection6L = { cash: c6Cash, bank: c6Bank, total: c6Cash + c6Bank };
+        const counterSale = { cash: otherCash, bank: otherBank, total: otherCash + otherBank };
 
         const totalRevenue = {
             cash: collection19L.cash + collection6L.cash + counterSale.cash,
@@ -148,7 +135,7 @@ const CashRecon = ({ sales = [], expenses = [], inventory = [], openingBalances 
         if (revenueChartRef.current) {
             const { collection19L, collection6L, counterSale } = reconData;
             const chartData = {
-                labels: ['19L Collection', '6L Collection', 'Counter Sale'],
+                labels: ['19L Collection', '6L Collection', 'Counter Sale / Other'],
                 datasets: [{
                     data: [collection19L.total, collection6L.total, counterSale.total],
                     backgroundColor: ['#1976D2', '#29B6F6', '#64B5F6'],
@@ -167,7 +154,7 @@ const CashRecon = ({ sales = [], expenses = [], inventory = [], openingBalances 
             
             if (hasData) {
                  revenueChartInstance.current = new Chart(revenueChartRef.current, {
-                    type: 'doughnut', // Changed to doughnut for a more modern dashboard look
+                    type: 'doughnut', 
                     data: chartData,
                     options: {
                         responsive: true,
@@ -228,8 +215,6 @@ const CashRecon = ({ sales = [], expenses = [], inventory = [], openingBalances 
                  </div>
             </div>
             
-            
-
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-1 bg-white rounded-xl shadow-md border border-gray-100 p-6 flex flex-col">
                     <h2 className="text-lg font-bold text-brand-text-primary mb-4 border-b border-gray-100 pb-2">
@@ -239,7 +224,6 @@ const CashRecon = ({ sales = [], expenses = [], inventory = [], openingBalances 
                     <div className="flex-grow relative min-h-[250px] flex items-center justify-center">
                         {(reconData.totalRevenue.total > 0) ? (
                             <>
-                                
                                 <canvas ref={revenueChartRef}></canvas>
                             </>
                         ) : (
@@ -267,7 +251,7 @@ const CashRecon = ({ sales = [], expenses = [], inventory = [], openingBalances 
                                 {renderRow('Opening Balance', reconData.opening, true)}
                                 {renderRow('19L Collection', reconData.collection19L)}
                                 {renderRow('6L Collection', reconData.collection6L)}
-                                {renderRow('Counter Sale', reconData.counterSale)}
+                                {renderRow('Counter Sale / Other', reconData.counterSale)}
                                 {renderRow('Total Revenue', reconData.totalRevenue, true)}
                                 {renderRow('Total Expenses', reconData.totalExpense, true)}
                                 {renderRow('Salaries Paid', reconData.salaryExpense, false, true)}
